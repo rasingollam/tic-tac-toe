@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sleek Tic-Tac-Toe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-color: #0f172a;
+        --board-bg: #1e293b;
+        --cell-bg: #334155;
+        --cell-hover: #475569;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --accent-x: #38bdf8;
+        --accent-o: #f472b6;
+        --btn-bg: #4f46e5;
+        --btn-hover: #4338ca;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--bg-color), #000000);
+        color: var(--text-primary);
+        font-family: 'Outfit', sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
+      }
+
+      h2 {
+        margin: 0 0 5px 0;
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        letter-spacing: -1px;
+      }
+      
+      .session-info {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 30px;
+        background: rgba(0,0,0,0.2);
+        padding: 5px 12px;
+        border-radius: 20px;
+      }
+
+      table {
+        border-collapse: separate;
+        border-spacing: 10px;
+        background: var(--board-bg);
+        padding: 10px;
+        border-radius: 16px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      }
+
+      td {
+        width: 100px;
+        height: 100px;
+        background: var(--cell-bg);
+        border-radius: 12px;
+        text-align: center;
+        font-size: 4rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        user-select: none;
+      }
+
+      td:hover {
+        background: var(--cell-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      }
+      
+      td:active {
+        transform: translateY(1px);
+      }
+
+      /* Specific colors for X and O */
+      td.cell-x {
+        color: var(--accent-x);
+        text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+      }
+      
+      td.cell-o {
+        color: var(--accent-o);
+        text-shadow: 0 0 15px rgba(244, 114, 182, 0.4);
+      }
+
+      .status-container {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+      }
+
+      #status {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-primary);
+      }
+
+      button {
+        background: var(--btn-bg);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      button:hover {
+        background: var(--btn-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(79, 70, 229, 0.4);
+      }
+      
+      button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+      }
+
+      /* Entrance Animation */
+      @keyframes popIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        70% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      .animated {
+        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      @media (max-width: 500px) {
+        td { width: 80px; height: 80px; font-size: 3rem; }
+        .container { padding: 20px; border-radius: 0; width: 100vw; height: 100vh; justify-content: center;}
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 id="header-title">Tic-Tac-Toe</h2>
+      <div id="session-display" class="session-info"></div>
+      
+      <table id="board"></table>
+      
+      <div class="status-container">
+        <p id="status"></p>
+        <button onclick="resetGame()" id="reset-btn" style="display: none;">Restart Game</button>
+      </div>
+    </div>
+
+    <script>
+      // Get or generate a session ID
+      const urlParams = new URLSearchParams(window.location.search);
+      let sessionId = urlParams.get("session_id");
+      if (!sessionId) {
+        sessionId = Math.random().toString(36).substring(2, 10);
+        window.history.replaceState({}, "", `?session_id=${sessionId}`);
+      }
+      
+      // Update UI with Session info
+      document.getElementById("session-display").innerText = `Session ID: ${sessionId}`;
+
+      async function fetchBoard() {
+        try {
+            const res = await fetch(`http://localhost:3000/board?session_id=${sessionId}`);
+            return res.json();
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+      }
+
+      async function makeMove(row, col) {
+        try {
+            await fetch("http://localhost:3000/move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId, row, col }),
+            });
+            renderBoard();
+        } catch(e) { console.error(e); }
+      }
+
+      async function resetGame() {
+        try {
+            await fetch("http://localhost:3000/reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId }),
+            });
+            renderBoard();
+        } catch(e) { console.error(e); }
+      }
+
+      async function renderBoard() {
+        const data = await fetchBoard();
+        if(!data) return;
+
+        const boardEl = document.getElementById("board");
+        boardEl.innerHTML = "";
+        
+        data.board.forEach((row, i) => {
+          const tr = document.createElement("tr");
+          row.forEach((cell, j) => {
+            const td = document.createElement("td");
+            // Add symbol if not empty
+            if (cell !== ' ') {
+                const span = document.createElement('span');
+                span.innerText = cell;
+                span.classList.add('animated');
+                td.appendChild(span);
+                
+                // Add specific styling class
+                if (cell === 'X') td.classList.add('cell-x');
+                else if (cell === 'O') td.classList.add('cell-o');
+            }
+            
+            // Only add click listener if game is not over and cell is empty
+            if (!data.winner && cell === ' ') {
+                td.onclick = () => makeMove(i, j);
+            } else if (cell !== ' ') {
+                td.style.cursor = 'default';
+            } else {
+                 td.style.cursor = 'not-allowed';
+            }
+            
+            tr.appendChild(td);
+          });
+          boardEl.appendChild(tr);
+        });
+        
+        const statusEl = document.getElementById("status");
+        const btnEl = document.getElementById("reset-btn");
+        
+        // Detailed status message
+        if (data.winner) {
+            statusEl.innerHTML = `Winner: <span style="color: ${data.winner === 'X' ? 'var(--accent-x)' : 'var(--accent-o)'}">${data.winner}!</span>`;
+            btnEl.style.display = "block";
+            btnEl.classList.add('animated');
+        } else {
+            // Check for draw (board is full no winner)
+            let isDraw = true;
+            for(let r=0; r<3; r++){
+                for(let c=0; c<3; c++){
+                    if(data.board[r][c] === ' ') isDraw = false;
+                }
+            }
+
+            if(isDraw) {
+                statusEl.innerText = "It's a Draw!";
+                btnEl.style.display = "block";
+                btnEl.classList.add('animated');
+            } else {
+                 statusEl.innerHTML = `Next up: <span style="color: ${data.turn === 'X' ? 'var(--accent-x)' : 'var(--accent-o)'}">${data.turn}</span>`;
+                 btnEl.style.display = "block"; // Always show restart to reset if needed mid-game
+                 btnEl.innerText = "Restart Game";
+            }
+        }
+      }
+
+      renderBoard();
+    </script>
+  </body>
+</html>

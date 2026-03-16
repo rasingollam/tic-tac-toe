@@ -1,13 +1,42 @@
-use yew::prelude::*;
+use std::str::FromStr;
+
 use gloo_net::http::Request;
+use js_sys::Math;
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsValue;
+// Note: `JsCast` methods are available via the web-sys bindings where needed.
 use web_sys::window;
+use yew::prelude::*;
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub enum Difficulty {
     Easy,
     Medium,
     Hard,
+}
+
+impl std::fmt::Display for Difficulty {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Difficulty::Easy => "Easy",
+            Difficulty::Medium => "Medium",
+            Difficulty::Hard => "Hard",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+impl FromStr for Difficulty {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Easy" => Ok(Difficulty::Easy),
+            "Medium" => Ok(Difficulty::Medium),
+            "Hard" => Ok(Difficulty::Hard),
+            _ => Err(()),
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -70,12 +99,13 @@ impl Component for App {
             Some(id) => id,
             None => {
                 // Generate simple random session ID
-                let rand_val = js_sys::Math::random().to_string();
-                let new_id = rand_val[2..10].to_string();
+                let rand_val = Math::random().to_string();
+                // `0.<hex>` -> take slice after "0."
+                let new_id = rand_val.get(2..10).unwrap_or(&rand_val).to_string();
                 // Push to URL
                 let history = win.history().unwrap();
                 let new_url = format!("?session_id={}", new_id);
-                let _ = history.replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&new_url));
+                let _ = history.replace_state_with_url(&JsValue::NULL, "", Some(&new_url));
                 new_id
             }
         };
@@ -149,18 +179,15 @@ impl Component for App {
                 
                 <div class="game-settings">
                     <div class="session-info">{ format!("Session ID: {}", self.session_id) }</div>
-                    <select 
-                        class="difficulty-select" 
+                    <select
+                        class="difficulty-select"
                         onchange={link.callback(|e: Event| {
-                            use wasm_bindgen::JsCast;
                             let target: web_sys::HtmlSelectElement = e.target_unchecked_into();
                             let val = target.value();
-                            let diff = match val.as_str() {
-                                "Easy" => Difficulty::Easy,
-                                "Medium" => Difficulty::Medium,
-                                _ => Difficulty::Hard,
-                            };
-                            Msg::ChangeDifficulty(diff)
+                            match Difficulty::from_str(&val) {
+                                Ok(diff) => Msg::ChangeDifficulty(diff),
+                                Err(_) => Msg::SetWaiting(false),
+                            }
                         })}
                     >
                         <option value="Easy" selected={data.difficulty == Difficulty::Easy}>{"Bot: Easy"}</option>
@@ -207,7 +234,8 @@ impl Component for App {
                                     let onclick = if clickable {
                                         link.callback(move |_| Msg::MakeMove(r, c))
                                     } else {
-                                        link.callback(|_| Msg::SetWaiting(false)) // No-op essentially
+                                        // no-op
+                                        link.callback(|_| Msg::SetWaiting(false))
                                     };
                                     
                                     // Set inline cursor style for correctness matching vanilla css disabled class structure

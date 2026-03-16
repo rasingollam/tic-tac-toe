@@ -1,3 +1,6 @@
 /target/
+/frontend/target/
 **/*.rs.bk
 .DS_Store
+frontend/Cargo.lock
+frontend/dist/
